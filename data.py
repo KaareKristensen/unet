@@ -1,8 +1,7 @@
 from __future__ import print_function
 from keras.preprocessing.image import ImageDataGenerator
 import numpy as np 
-import os, cv2
-import glob
+import os, cv2, shutil
 import skimage.io as io
 import skimage.transform as trans
 
@@ -39,12 +38,35 @@ def adjustData(img,mask,flag_multi_class,num_class):
         mask[mask <= 0.5] = 0
     return (img,mask)
 
+def scale(input_folder, output_folder, scale_percent):
+    for file in sorted(os.listdir(input_folder)):
+        if '.png' in file:
+            tmp = cv2.imread(input_folder + '/' + file, 0)
+            width = int(tmp.shape[1] * scale_percent / 100)
+            height = int(tmp.shape[0] * scale_percent / 100)
+            dim = (width, height)
+            tmp = cv2.resize(tmp, dim, interpolation = cv2.INTER_AREA)
+            io.imsave(output_folder + '/' + file, tmp)
+    print('Scaling is done.')
+
 def pad(input_folder, output_folder,already_padded):
     for file in sorted(os.listdir(input_folder)):
         if '.png' in file:
             tmp = cv2.imread(input_folder + '/' + file, 0)
+            width = int(tmp.shape[1])
+            height = int(tmp.shape[0])
+            wantedWidth = width
+            wantedHeight = height
+            if width % 32 != 0:
+                wantedWidth = width + 32 - width % 32
+            if height % 32 != 0:
+                wantedHeight = height + 32 - height % 32
+            top= int(np.ceil((wantedHeight-height) / 2))
+            bottom= int(np.floor((wantedHeight-height) / 2))
+            left = int(np.ceil((wantedWidth-width) / 2))
+            right = int(np.floor((wantedWidth-width) / 2))
             if not already_padded:
-                tmp = cv2.copyMakeBorder(tmp.copy(),12,12,5,6,cv2.BORDER_CONSTANT,value=(0,0,0))
+                tmp = cv2.copyMakeBorder(tmp.copy(), top, bottom, left, right, cv2.BORDER_CONSTANT,value=(0,0,0))
             io.imsave(output_folder + '/' + file, tmp)
     if not already_padded:
         print('Padding is done.')
@@ -62,7 +84,7 @@ def crop(input_folder, output_folder):
 def threshold(folder):
     for img in sorted(os.listdir(folder)):
         tmp = cv2.imread(folder + '/' + img, 0)
-        _, tmp = cv2.threshold(tmp,115,255,cv2.THRESH_BINARY)
+        _, tmp = cv2.threshold(tmp,70,255,cv2.THRESH_BINARY)
         io.imsave(folder + '/' + img, tmp)
 
 
@@ -104,31 +126,14 @@ def trainGenerator(batch_size,train_path,image_folder,mask_folder,aug_dict,image
 
 
 
-def testGenerator(test_path,num_image = 30,target_size = (256,256),flag_multi_class = False,as_gray = True):
-    for i in range(num_image):
-        img = io.imread(os.path.join(test_path,"%d.png"%i),as_gray = as_gray)
+def testGenerator(test_path,target_size = (608,576),flag_multi_class = False,as_gray = True):
+    for file in os.listdir(test_path):
+        img = io.imread(os.path.join(test_path,file),as_gray = as_gray)
         img = img / 255
         img = trans.resize(img,target_size)
         img = np.reshape(img,img.shape+(1,)) if (not flag_multi_class) else img
         img = np.reshape(img,(1,)+img.shape)
         yield img
-
-
-def geneTrainNpy(image_path,mask_path,flag_multi_class = False,num_class = 2,image_prefix = "image",mask_prefix = "mask",image_as_gray = True,mask_as_gray = True):
-    image_name_arr = glob.glob(os.path.join(image_path,"%s*.png"%image_prefix))
-    image_arr = []
-    mask_arr = []
-    for index,item in enumerate(image_name_arr):
-        img = io.imread(item,as_gray = image_as_gray)
-        img = np.reshape(img,img.shape + (1,)) if image_as_gray else img
-        mask = io.imread(item.replace(image_path,mask_path).replace(image_prefix,mask_prefix),as_gray = mask_as_gray)
-        mask = np.reshape(mask,mask.shape + (1,)) if mask_as_gray else mask
-        img,mask = adjustData(img,mask,flag_multi_class,num_class)
-        image_arr.append(img)
-        mask_arr.append(mask)
-    image_arr = np.array(image_arr)
-    mask_arr = np.array(mask_arr)
-    return image_arr,mask_arr
 
 
 def labelVisualize(num_class,color_dict,img):
@@ -141,6 +146,8 @@ def labelVisualize(num_class,color_dict,img):
 
 
 def saveResult(save_path,npyfile,flag_multi_class = False,num_class = 2):
+    shutil.rmtree(save_path, ignore_errors=True, onerror=None)
+    os.mkdir(save_path)
     for i,item in enumerate(npyfile):
         img = labelVisualize(num_class,COLOR_DICT,item) if flag_multi_class else item[:,:,0]
         io.imsave(os.path.join(save_path,"%d_predict.png"%i),img)
