@@ -11,8 +11,18 @@ testfolder = input("Input test folder containing image folder, or empty string f
 
 useDataAugmentation = input("Use data augmentation, either set to 'true' or 'false':\n")
 saveModelFilename = input("Input filename for the model if you want it saved:\n")
+pretrainedWeights = input("Input filename of pretrained weights, empty for no pretrained weights:\n")
+transferLearnString = input("Input whether to transfer learn from pretrained weights, 'true' or 'false':\n")
+
 if not useDataAugmentation in ['true', 'false']:
     print("useDataAugmentation must be either 'true' or 'false' and not " + useDataAugmentation)
+
+transferLearn = False
+if transferLearnString == 'true':
+    transferLearn = True
+
+if pretrainedWeights == "":
+    pretrainedWeights = None
 
 data_gen_args = dict()
 
@@ -28,12 +38,12 @@ if useDataAugmentation == 'true':
 
 myGene = trainGenerator(2,'data/' + trainfolder +'/train','images','labels',data_gen_args,save_to_dir = None)
 
-model = UNet(input_size=(608, 576, 1))
+model = UNet(pretrained_weights=pretrainedWeights, input_size=(608, 576, 1), transfer_learn=transferLearn)
 model_checkpoint = []
 if saveModelFilename != "":
     model_checkpoint = [ModelCheckpoint(saveModelFilename + ".hdf5", monitor='loss',verbose=1, save_best_only=True)]
 
-model.fit(myGene,steps_per_epoch=1000,epochs=10,callbacks=model_checkpoint)
+model.fit(myGene,steps_per_epoch=100,epochs=10,callbacks=model_checkpoint)
 
 if (testfolder != ""):
     testImagePath = "data/" + testfolder + "/test/images"
