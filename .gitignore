@@ -67,6 +67,11 @@
 *.3dm
 *.max
 
+# Don't ignore
+!results/*
+!results/*/*
+!results/*/*/*
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -222,4 +227,3 @@ cython_debug/
 # Ignore all local history of files
 .history
 .ionide
-
