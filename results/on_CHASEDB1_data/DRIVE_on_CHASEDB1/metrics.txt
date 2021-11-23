@@ -1,0 +1,3 @@
+6/6 [==============================] - 6s 46ms/step - loss: 0.3363 - accuracy: 0.9469 - true_negatives: 1887743.0000 - true_positives: 101835.0000 - false_negatives: 58958.0000 - false_positives: 52712.0000
+LOSS AND METRICS:
+[0.33627089858055115, 0.946855366230011, 1887743.0, 101835.0, 58958.0, 52712.0]

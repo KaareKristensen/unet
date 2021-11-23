@@ -9,6 +9,7 @@ from keras.optimizers import *
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler
 from keras import backend as keras
 from tensorflow.keras import initializers
+from tensorflow.keras.metrics import *
 
 
 def UNet(pretrained_weights = None,input_size = (608,576,1), transfer_learn = False, kernel_initializer = 'he_normal'):
@@ -55,8 +56,8 @@ def UNet(pretrained_weights = None,input_size = (608,576,1), transfer_learn = Fa
     conv10 = Conv2D(1, 1, activation = 'sigmoid')(conv9)
 
     model = Model(inputs,conv10)
-
-    model.compile(optimizer = Adam(learning_rate = 1e-4), loss = 'binary_crossentropy', metrics = ['accuracy'])
+    metrics = ['accuracy', TrueNegatives(), TruePositives(), FalseNegatives(), FalsePositives()]
+    model.compile(optimizer = Adam(learning_rate = 1e-4), loss = 'binary_crossentropy', metrics = metrics)
     
     #model.summary()
 

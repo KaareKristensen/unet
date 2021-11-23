@@ -13,8 +13,9 @@ model = UNet(pretrained_weights=trainedModel, input_size=(608, 576, 1))
 
 
 testImagePath = "data/" + testfolder + "/images"
+numberOfImages = len(os.listdir(testImagePath))
 evalGene = trainGenerator(1,'data/' + testfolder,'images','labels',{},save_to_dir = None)
-metricDict = model.evaluate(evalGene, steps=len(os.listdir(testImagePath)))
+metricDict = model.evaluate(evalGene, steps=numberOfImages)
 
 # maybe threshold the results
 
