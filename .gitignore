@@ -71,6 +71,7 @@
 !results/*
 !results/*/*
 !results/*/*/*
+!results/*/*/*/*
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
