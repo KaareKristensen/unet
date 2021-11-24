@@ -1,6 +1,5 @@
 from model import *
 from data import *
-import tensorflow as tf
 
 
 

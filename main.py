@@ -2,8 +2,6 @@ from model import *
 from data import *
 import tensorflow as tf
 
-#os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-
 #Need to preprocess images since CHASEDB1 has size 584*565*3, but we need y32*x32*1
 #We change to gray-scale and 608*576*1
 trainfolder = input("Input training folder containing images and labels folders:\n")
